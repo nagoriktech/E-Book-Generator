@@ -1,0 +1,745 @@
+{
+  "name": "Ebook Generator",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -32
+      ],
+      "id": "91b93f9e-5e75-47bd-b75f-4e80ee15be38",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1abfb3d-bb28-4114-91d0-3160ac6fa8b2",
+              "name": "Topic",
+              "value": "How to train self-confidence",
+              "type": "string"
+            },
+            {
+              "id": "a3e9d118-eea4-45c3-8aaf-9c427b4ed1e1",
+              "name": "Tone",
+              "value": "Calm",
+              "type": "string"
+            },
+            {
+              "id": "a3c3dfb4-f415-4825-b735-ccd3501bcf9a",
+              "name": "Clarity Level",
+              "value": "Semi-Explicit",
+              "type": "string"
+            },
+            {
+              "id": "6aa74626-afea-4230-8ad4-a69b4729b9b3",
+              "name": "Target Mindset",
+              "value": "Self-Trusting",
+              "type": "string"
+            },
+            {
+              "id": "034b98ab-1b33-4e47-8c28-d23d74ce93c8",
+              "name": "Framing Style",
+              "value": "Identity Shift",
+              "type": "string"
+            },
+            {
+              "id": "df625550-9ad1-496d-a36b-645c6ab09659",
+              "name": "Energy Intensity",
+              "value": "Low",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        -32
+      ],
+      "id": "07e1ef29-daae-41ed-a6f2-df791b358767",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        560
+      ],
+      "id": "56bc29a2-57db-465c-a282-2780031034fc",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "G7yKHr9wDJKojrFb",
+          "name": "OpenAi account nagorik"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"title\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"sub-title\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        160
+      ],
+      "id": "4c12da03-89af-4180-871e-c9c2485c2d5c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Topic of interest: {{ $json.Topic }}\n\nTone: {{ $json.Tone }}\n\nClarity Level: {{ $json['Clarity Level']}}\n\nTarget Mindset: {{ $json['Target Mindset'] }}\n\nFraming Style: {{ $json['Framing Style'] }}\n\nEnergy Intensity: {{ $json['Energy Intensity'] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI agent specialized in generating ebook titles and subtitles.\n\nYou will be given:\n\n1. A user-defined 'topic of interest'\n2. Five parameters with user-selected values:\na. Tone\nb. Clarity Level\nc. Target Mindset\nd. Framing Style\ne. Energy Intensity\n\nGenerate:\n\n1. One catchy yet clear title that explicitly communicates the book is about the user’s topic of interest. Do not generate anything with colon in it (:)\n\n2. One compelling subtitle within 5-12 words that goes well with your generated title and clearly describes the benefits the reader will gain from reading the book\n\nRules\n\n1. The title must be attention-grabbing while clearly signaling the book’s topic.\n\n2. The subtitle must:\na. Focus on reader benefits and outcomes\nb. Use power words and numbers where appropriate\nc. Be longer and more descriptive, not short or vague\n\n3. Strictly respect all provided parameter values.\n\n4. Do not include explanations, commentary, or extra text.\n\n5. Output only valid JSON in the exact format below:\n{\n  \"title\": \"generated_title\",\n  \"sub-title\": \"generated_subtitle\"\n}\n\n6. Do not add markdown, emojis, or formatting outside the JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -32
+      ],
+      "id": "b4fa4ad9-cc1a-4753-872d-dd16ae20aac0",
+      "name": "Title & Subtitle Generator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Title: {{ $('Title & Subtitle Generator').item.json.output.title }}\n\nSub-title: {{ $('Title & Subtitle Generator').item.json.output['sub-title'] }}\n\nNumber of chapters: {{ $json['Number of Chapters'] }}\n\nNumber of Segments: {{ $json['Number of Segments'] }}\n\nNumber of Sub-segments: {{ $json['Number of Sub-segments'] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a professional nonfiction book-outline writer. Given a Title and Sub-title, generate a fully structured book outline following professional publishing standards.\n\nRules (Strict)\n\n1. Follow exactly the user-specified number of chapters, sections, and sub-sections.\n2. Do not add, remove, or rename structural elements.\n3. Maintain logical flow, clarity, and thematic consistency.\n\nOutput Format (Mandatory)\n\n1. Output only a JSON array of chapter objects.\n2. Each chapter must contain:\n\n\"Chapter Number\" (string)\n\"Chapter_Name\" (string)\n\"Chapter_Sections\" (single formatted string)\n\n3. Section format:\n\nSection X.Y — Section Title\nX.Y.Z: Sub-section Title\n\n4. Preserve clean line breaks and numbering.\n5.  No explanations or text outside the JSON.\n\nGenerate only the final outline in the specified format."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        -32
+      ],
+      "id": "8a4e37c0-b2f5-46df-ace0-d42f60b4a660",
+      "name": "Outline Generator"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6992b461-e808-4f92-a304-957909dd896d",
+              "name": "Number of Chapters",
+              "value": "5",
+              "type": "string"
+            },
+            {
+              "id": "9c6998b1-4723-4f22-ae39-9c80ba2fc429",
+              "name": "Number of Segments",
+              "value": "2-4",
+              "type": "string"
+            },
+            {
+              "id": "32d6695a-2e9c-4318-9680-17929caf17f6",
+              "name": "Number of Sub-segments",
+              "value": "2-4",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "ca56f01f-3c6e-4c13-a8c0-119610e69c3d",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"array\",\n  \"items\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"Chapter Number\": {\n        \"type\": \"string\",\n        \"description\": \"Chapter number as a string (e.g., \\\"1\\\")\"\n      },\n      \"Chapter_Name\": {\n        \"type\": \"string\",\n        \"description\": \"Title of the chapter\"\n      },\n      \"Chapter_Sections\": {\n        \"type\": \"string\",\n        \"description\": \"All sections and sub-sections formatted as a single string\"\n      }\n    },\n    \"required\": [\n      \"Chapter Number\",\n      \"Chapter_Name\",\n      \"Chapter_Sections\"\n    ],\n    \"additionalProperties\": false\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        176
+      ],
+      "id": "e0bbce30-a52d-49e8-89e2-646347e98509",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        -32
+      ],
+      "id": "0a360780-849c-46fb-8c7a-2f4ffb653b46",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1264,
+        -32
+      ],
+      "id": "6e7f0056-0e58-43e3-aa42-4d625dcdeb66",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Chapter Number: {{ $json['Chapter Number'] }}\nChapter Name: {{ $json.Chapter_Name }}\nChapter Outline: \n{{ $json.Chapter_Sections }}",
+        "options": {
+          "systemMessage": "=You are my dedicated ghostwriter for the non-fiction book\n“{{ $('Title & Subtitle Generator').item.json.output.title }}: {{ $('Title & Subtitle Generator').item.json.output['sub-title'] }}”, on the topic “{{ $('Edit Fields').item.json.Topic }}.”\n\nWrite one complete chapter at a time strictly from the outline I provide. Each chapter must be cohesive, professionally authored, and aligned with the rest of the book.\n\nLength: 900–1200 words.\n\nStructure (Strict)\n1. Chapter title as H1: Chapter X: Chapter Name\n2. Use only outline section titles as H2\n3. No headings for sub-sections within each sections.\n4. Do not use the symbol “—”\n\nNarrative Flow (Required)\nHook → original story with tension → transition to core lesson → conversational, research-backed teaching → organic frameworks/metaphors → practical examples & short anecdotes → emotionally uplifting close that builds confidence and momentum.\n\nStyle & Voice\nInspirational, warm, empowering. Conversational yet authoritative (mentor/coach). Varied sentence length, metaphors, open loops. Blend psychology, neuroscience, and realistic-sounding studies. Favor narrative flow over lists.\n\nEngagement\nUse curiosity, future pacing, identity-level transformation, before/after contrast, and sensory storytelling. Inspire without manipulation.\n\nContent Rules\nAll stories, metaphors, examples, and studies must be original\nFocus on practical application\nUse bullets/tables only if they clearly improve understanding\nDense, purposeful paragraphs\n\nConsistency & Output\nMaintain consistent voice and emotional tone across chapters.\nOutput in Markdown with clean formatting, ready for publication"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        32
+      ],
+      "id": "d28d2131-2eec-4315-be16-92c07872050e",
+      "name": "Chapter Writer Agent"
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        32
+      ],
+      "id": "944bcb49-510c-44bb-b170-f77094eb700a",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/upload/drive/v3/files/{{ $('Create a document').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "uploadType",
+              "value": "multipart"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "multipart/related; boundary=divider",
+        "body": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2112,
+        -128
+      ],
+      "id": "eb69c5cb-d304-45a5-aab9-c00f8089d3ad",
+      "name": "UpdateGoogleDoc",
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "pbU4sXY3pglN8D08",
+          "name": "Tabeeb Nagorik GDrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract raw HTML body content without wrapping tags\nconst htmlContent = $('Markdown').first().json.data;\n\n// Preserve links\nfunction preserveLinks(html) {\n  let processedHtml = html;\n\n  processedHtml = processedHtml.replace(\n    /<a\\s+href=[\"']([^\"']+)[\"'][^>]*>(.*?)<\\/a>/gi,\n    '<a href=\"$1\">$2</a>'\n  );\n\n  processedHtml = processedHtml.replace(\n    /<a\\s+href=[\"'](?!https?:\\/\\/|mailto:|tel:)([^\"']+)[\"']>/gi,\n    '<a href=\"https://$1\">'\n  );\n\n  return processedHtml;\n}\n\n// Remove <h3> tags and their content, and remove <hr> tags\nfunction removeH3AndHr(html) {\n  let cleanedHtml = html;\n\n  // Remove <h3>...</h3> including inner content\n  cleanedHtml = cleanedHtml.replace(\n    /<h3\\b[^>]*>[\\s\\S]*?<\\/h3>/gi,\n    ''\n  );\n\n  // Remove <hr>, <hr/>, <hr />\n  cleanedHtml = cleanedHtml.replace(\n    /<hr\\b[^>]*\\/?>/gi,\n    ''\n  );\n\n  return cleanedHtml;\n}\n\nconst bodyContentOnly = removeH3AndHr(\n  preserveLinks(htmlContent)\n);\n\nreturn {\n  body_content: bodyContentOnly\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        32
+      ],
+      "id": "047ac2d6-18e0-4aa3-ab6c-4a1b6de93e29",
+      "name": "BodyContentCode"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s",
+          "mode": "list",
+          "cachedResultName": "Ebook Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Chapter Content": "={{ $json.body_content }}"
+          },
+          "matchingColumns": [
+            "Chapter Content"
+          ],
+          "schema": [
+            {
+              "id": "Chapter Content",
+              "displayName": "Chapter Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2128,
+        32
+      ],
+      "id": "52aa5ab9-f5c5-4ec1-9618-54df35da0e1a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3MJE8MvoAP44Rjl9",
+          "name": "Nagorik Google Sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s",
+          "mode": "list",
+          "cachedResultName": "Ebook Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1632,
+        -128
+      ],
+      "id": "ed594aa5-f21c-43f6-bf65-4c8dfaf4c751",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3MJE8MvoAP44Rjl9",
+          "name": "Nagorik Google Sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "var Bookcontent = $input.first().json['Chapter Content'] || [];\n\n// 1. Get length of the content\nvar len = Bookcontent.length;\n\n// 2–3. Loop and merge all string items\nvar mergedContent = '';\nfor (var i = 0; i < len; i++) {\n  mergedContent += Bookcontent[i] + '\\n';\n}\n\n// 4. Wrap merged content with required multipart structure\nvar finalOutput =\n`--divider\\r\nContent-Type: application/json; charset=UTF-8\\r\n\\r\n{\"mimeType\":\"application/vnd.google-apps.document\"}\\r\n--divider\\r\nContent-Type: text/html\\r\n\\r\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    p, ul, ol, table, h1, h2, h3, h4, h5, h6 {\n      margin-bottom: 10pt;\n    }\n    h2 {\n      margin-top: 20pt;\n    }\n    li {\n      margin-bottom: 2pt;\n    }\n    a {\n      color: #1155cc;\n      text-decoration: underline;\n    }\n  </style>\n</head>\n<body>\n${mergedContent}\n</body>\n</html>\n\\r\n--divider--\\r\n`;\n\n// 5. Return final output\nreturn {\n  json: {\n    output: finalOutput\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        -128
+      ],
+      "id": "3f167fd0-30c8-44d1-8c92-39f7fceb3093",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "Chapter Content"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        -128
+      ],
+      "id": "adaa4a31-75a1-43db-a932-0ad70e04c162",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "folderId": "1i3sGdmDLLeIgwfq1uORhqu3lc3lQvhZx",
+        "title": "=Ebook: {{ $json.output.title }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -32
+      ],
+      "id": "dd0047b3-2f0a-4af6-be12-8b862c9b3a4b",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "jLXnHeLzpmdZhIaX",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s",
+          "mode": "list",
+          "cachedResultName": "Ebook Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18ogksQ_mWCgX2CacuS8dDn8Qz46zmzCgtd0XDLTxz7s/edit#gid=0"
+        },
+        "numberToDelete": 100
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2288,
+        -128
+      ],
+      "id": "84f8cad1-c0bd-41c1-bf01-5c63f8027761",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3MJE8MvoAP44Rjl9",
+          "name": "Nagorik Google Sheet"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        -128
+      ],
+      "id": "13b89767-39c2-46f8-a350-90c1f676ca05",
+      "name": "Limit"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Title & Subtitle Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Title & Subtitle Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Outline Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Chapter Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Title & Subtitle Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Title & Subtitle Generator": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Outline Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Outline Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outline Generator": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chapter Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chapter Writer Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "BodyContentCode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BodyContentCode": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "UpdateGoogleDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UpdateGoogleDoc": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d6e0f00f-7e56-407c-9496-1c4e0be57f5e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5ca157bf036415a321c9d29eeb986017053989bb83b5b61701e90fe3987ac8b7"
+  },
+  "id": "enblM0SaPzXaEXbE",
+  "tags": []
+}
