@@ -134,3 +134,12 @@ Add a "Language" parameter to the Edit Fields node and incorporate language-spec
 
 **Create Chapter Templates**  
 Add conditional logic nodes that apply different writing styles or structures to specific chapters, such as using a different template for introduction chapters versus body chapters.
+
+---
+
+## License
+
+This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
+
+For more information about usage rights and restrictions, please refer to the LICENSE file in the repository root.
+
